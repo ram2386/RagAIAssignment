@@ -1,4 +1,4 @@
-# Innvonix HR Policy RAG CLI
+# HR Policy RAG CLI
 
 A fully local Python CLI that answers questions from `data/HRPolicy.pdf` using LangChain, FAISS, Ollama embeddings, and an Ollama local LLM. It does not use OpenAI, Gemini, Anthropic, Pinecone, or any paid cloud API.
 
