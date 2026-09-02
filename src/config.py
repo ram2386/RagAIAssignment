@@ -23,7 +23,8 @@ class AppConfig:
     chunk_size: int = int(os.getenv("CHUNK_SIZE", "500"))
     chunk_overlap: int = int(os.getenv("CHUNK_OVERLAP", "100"))
     top_k: int = int(os.getenv("TOP_K", "3"))
+    ollama_num_ctx: int = int(os.getenv("OLLAMA_NUM_CTX", "4096"))
+    ollama_num_predict: int = int(os.getenv("OLLAMA_NUM_PREDICT", "300"))
 
 
 config = AppConfig()
-

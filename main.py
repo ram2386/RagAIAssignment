@@ -47,7 +47,16 @@ def main() -> None:
             config.index_path,
             rebuild=args.rebuild_index,
         )
-        llm = None if args.search_only else create_llm(config.local_llm, config.ollama_base_url)
+        llm = (
+            None
+            if args.search_only
+            else create_llm(
+                config.local_llm,
+                config.ollama_base_url,
+                config.ollama_num_ctx,
+                config.ollama_num_predict,
+            )
+        )
     except (DocumentLoadError, VectorStoreError) as exc:
         print(f"\nError: {exc}")
         return

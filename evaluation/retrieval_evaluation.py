@@ -41,7 +41,12 @@ def main() -> None:
     chunks = split_documents(documents, config.chunk_size, config.chunk_overlap)
     embeddings = create_embeddings(config.embedding_model, config.ollama_base_url)
     vector_store = get_or_create_faiss_index(chunks, embeddings, config.index_path)
-    llm = create_llm(config.local_llm, config.ollama_base_url)
+    llm = create_llm(
+        config.local_llm,
+        config.ollama_base_url,
+        config.ollama_num_ctx,
+        config.ollama_num_predict,
+    )
 
     for item in QUESTIONS:
         result = answer_question(item.question, vector_store, llm, config.top_k)
@@ -67,4 +72,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

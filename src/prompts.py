@@ -9,6 +9,8 @@ RAG_PROMPT = ChatPromptTemplate.from_template(
 Answer the employee's question using ONLY the supplied HR Policy context.
 
 Do not use general knowledge.
+Do not show reasoning, analysis, or thinking steps.
+Return only the final answer.
 
 Do not assume or invent:
 - HR rules
@@ -36,4 +38,3 @@ Question:
 {question}
 """
 )
-

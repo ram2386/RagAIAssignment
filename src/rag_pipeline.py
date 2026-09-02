@@ -39,9 +39,21 @@ def format_context(retrieved_context: list[tuple[Document, float]]) -> str:
     return "\n\n---\n\n".join(context_parts)
 
 
-def create_llm(model: str, base_url: str) -> ChatOllama:
+def create_llm(
+    model: str,
+    base_url: str,
+    num_ctx: int = 4096,
+    num_predict: int = 300,
+) -> ChatOllama:
     """Create the local Ollama chat model."""
-    return ChatOllama(model=model, base_url=base_url, temperature=0)
+    return ChatOllama(
+        model=model,
+        base_url=base_url,
+        reasoning=False,
+        temperature=0,
+        num_ctx=num_ctx,
+        num_predict=num_predict,
+    )
 
 
 def answer_question(

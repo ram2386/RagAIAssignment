@@ -101,6 +101,15 @@ Ask a question:
 
 The CLI prints retrieved chunks, page numbers, raw FAISS score/distance values, the final answer, source pages, retrieval time, generation time, and total response time.
 
+For faster local responses, the app caps Ollama generation with:
+
+```text
+OLLAMA_NUM_CTX=4096
+OLLAMA_NUM_PREDICT=300
+```
+
+This avoids accidentally using Qwen's very large default context window for short HR policy answers.
+
 ## Evaluation
 
 Run retrieval and answer evaluation:
