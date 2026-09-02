@@ -1,13 +1,15 @@
 """Interactive CLI for the local HR Policy RAG assistant."""
 
 from argparse import ArgumentParser
+from time import perf_counter
 
+from src.cli_feedback import Spinner
 from src.config import config
 from src.document_loader import DocumentLoadError, load_hr_policy_pdf
 from src.embeddings import create_embeddings
-from src.rag_pipeline import answer_question, create_llm, print_answer, print_retrieved_context
+from src.rag_pipeline import RagResult, create_llm, generate_answer, print_answer, print_retrieved_context
 from src.text_splitter import display_sample_chunks, split_documents
-from src.vector_store import VectorStoreError, get_or_create_faiss_index
+from src.vector_store import VectorStoreError, get_or_create_faiss_index, similarity_search_with_scores
 
 
 def build_parser() -> ArgumentParser:
@@ -67,19 +69,32 @@ def main() -> None:
             continue
 
         try:
-            if args.search_only:
-                from src.vector_store import similarity_search_with_scores
-
+            total_start = perf_counter()
+            with Spinner("Retrieving relevant HR policy chunks"):
+                retrieval_start = perf_counter()
                 retrieved_context = similarity_search_with_scores(vector_store, question, config.top_k)
-                print_retrieved_context(retrieved_context)
+                retrieval_time = perf_counter() - retrieval_start
+
+            print_retrieved_context(retrieved_context)
+
+            if args.search_only:
                 continue
 
             if llm is None:
                 print("\nError: Local LLM was not initialized.\n")
                 continue
 
-            result = answer_question(question, vector_store, llm, config.top_k)
-            print_retrieved_context(result.retrieved_context)
+            with Spinner("Generating answer with local Ollama model"):
+                answer, generation_time = generate_answer(question, retrieved_context, llm)
+
+            result = RagResult(
+                question=question,
+                answer=answer,
+                retrieved_context=retrieved_context,
+                retrieval_time=retrieval_time,
+                generation_time=generation_time,
+                total_time=perf_counter() - total_start,
+            )
             print_answer(result)
             print()
         except Exception as exc:

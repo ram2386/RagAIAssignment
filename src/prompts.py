@@ -4,7 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 
 RAG_PROMPT = ChatPromptTemplate.from_template(
-    """You are an Innvonix HR Policy Assistant.
+    """You are an HR Policy Assistant.
 
 Answer the employee's question using ONLY the supplied HR Policy context.
 

@@ -87,6 +87,25 @@ def answer_question(
     )
 
 
+def generate_answer(
+    question: str,
+    retrieved_context: list[tuple[Document, float]],
+    llm: ChatOllama,
+) -> tuple[str, float]:
+    """Generate an answer from already retrieved context."""
+    if not retrieved_context:
+        return "I could not find this information in the available HR Policy document.", 0
+
+    generation_start = perf_counter()
+    prompt = RAG_PROMPT.format_messages(
+        context=format_context(retrieved_context),
+        question=question,
+    )
+    response = llm.invoke(prompt)
+    generation_time = perf_counter() - generation_start
+    return str(response.content).strip(), generation_time
+
+
 def print_retrieved_context(retrieved_context: list[tuple[Document, float]]) -> None:
     """Print retrieved chunks with page numbers and raw FAISS distances."""
     print("\n========================================")
@@ -112,4 +131,3 @@ def print_answer(result: RagResult) -> None:
     print(f"Retrieval Time     : {result.retrieval_time:.2f} sec")
     print(f"Generation Time    : {result.generation_time:.2f} sec")
     print(f"Total Response Time: {result.total_time:.2f} sec")
-
