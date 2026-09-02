@@ -5,7 +5,7 @@ A fully local Python CLI that answers questions from `data/HRPolicy.pdf` using L
 ## Architecture
 
 ```text
-13-page HR Policy PDF
+     HR Policy PDF
           ↓
      PyPDFLoader
           ↓
