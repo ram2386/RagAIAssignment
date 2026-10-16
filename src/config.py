@@ -16,8 +16,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 @dataclass(frozen=True)
 class AppConfig:
     pdf_path: Path = BASE_DIR / os.getenv("PDF_PATH", "data/HRPolicy.pdf")
-    index_path: Path = BASE_DIR / os.getenv("FAISS_INDEX_PATH", "vector_store/faiss_index")
+    index_path: Path = BASE_DIR / os.getenv("FAISS_INDEX_PATH", "vector_store/faiss_index_mistral")
+    embedding_provider: str = os.getenv("EMBEDDING_PROVIDER", "mistral")
     embedding_model: str = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
+    mistral_embedding_model: str = os.getenv("MISTRAL_EMBEDDING_MODEL", "mistral-embed")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "mistral")
+    mistral_llm: str = os.getenv("MISTRAL_LLM", "mistral-small-latest")
     local_llm: str = os.getenv("LOCAL_LLM", "qwen3:4b")
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
     chunk_size: int = int(os.getenv("CHUNK_SIZE", "500"))

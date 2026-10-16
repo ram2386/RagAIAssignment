@@ -1,6 +1,6 @@
 # HR Policy RAG CLI
 
-A fully local Python CLI that answers questions from `data/HRPolicy.pdf` using LangChain, FAISS, Ollama embeddings, and an Ollama local LLM. It does not use OpenAI, Gemini, Anthropic, Pinecone, or any paid cloud API.
+A Python CLI that answers questions from `data/HRPolicy.pdf` using LangChain, FAISS, and Mistral for embeddings and answer generation by default. Ollama remains available as an optional local provider.
 
 ## Architecture
 
@@ -15,8 +15,8 @@ RecursiveCharacterTextSplitter
           ↓
         Chunks
           ↓
- Ollama Embeddings
-  nomic-embed-text
+ Mistral Embeddings
+  mistral-embed
           ↓
         FAISS
           ↓
@@ -28,7 +28,7 @@ RecursiveCharacterTextSplitter
           ↓
      RAG Prompt
           ↓
-   Ollama qwen3:4b
+ Mistral API (default)
           ↓
         Answer
 ```
@@ -42,7 +42,7 @@ RecursiveCharacterTextSplitter
 - Chunk: A smaller text segment used for embedding and retrieval.
 - Chunk Size: Maximum target characters per chunk.
 - Chunk Overlap: Shared text between neighboring chunks to preserve context.
-- Embedding: Numeric representation of text created locally by Ollama.
+- Embedding: Numeric representation of text created by Mistral by default.
 - Vector: The stored embedding for a chunk or query.
 - Vector Store: A searchable database of vectors.
 - FAISS: The local vector index used for similarity search.
@@ -50,7 +50,8 @@ RecursiveCharacterTextSplitter
 - Retriever: LangChain interface for returning top-k relevant chunks.
 - Context Retrieval: The selected chunks passed to the prompt.
 - LLM: The local model that writes the final answer.
-- Ollama: Local runtime for `nomic-embed-text` and `qwen3:4b`.
+- Mistral: Default hosted LLM used to generate answers.
+- Ollama: Optional local runtime for `nomic-embed-text` and `qwen3:4b`.
 
 ## Setup
 
@@ -60,7 +61,13 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Install and start Ollama, then pull the local models:
+Configure your Mistral API key in `.env`:
+
+```bash
+MISTRAL_API_KEY=your_api_key
+```
+
+To use optional local Ollama embeddings and LLMs, install Ollama and pull both models:
 
 ```bash
 ollama pull nomic-embed-text
@@ -91,6 +98,12 @@ Start the interactive CLI:
 
 ```bash
 python main.py
+```
+
+Select the local Ollama LLM instead of the default Mistral LLM:
+
+```bash
+python main.py --llm ollama
 ```
 
 Ask a question:

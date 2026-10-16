@@ -4,7 +4,7 @@ from pathlib import Path
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
-from langchain_ollama import OllamaEmbeddings
+from langchain_core.embeddings import Embeddings
 
 
 class VectorStoreError(RuntimeError):
@@ -13,7 +13,7 @@ class VectorStoreError(RuntimeError):
 
 def build_faiss_index(
     chunks: list[Document],
-    embeddings: OllamaEmbeddings,
+    embeddings: Embeddings,
     index_path: Path,
 ) -> FAISS:
     """Build and save a FAISS index from document chunks."""
@@ -26,14 +26,13 @@ def build_faiss_index(
         vector_store.save_local(str(index_path))
     except Exception as exc:
         raise VectorStoreError(
-            "Could not build FAISS index. Confirm Ollama is running and "
-            "the embedding model is installed with: ollama pull nomic-embed-text"
+            "Could not build FAISS index. Confirm the selected embedding provider is configured."
         ) from exc
 
     return vector_store
 
 
-def load_faiss_index(index_path: Path, embeddings: OllamaEmbeddings) -> FAISS:
+def load_faiss_index(index_path: Path, embeddings: Embeddings) -> FAISS:
     """Load an existing FAISS index from disk."""
     if not index_path.exists():
         raise VectorStoreError(f"FAISS index not found at {index_path}.")
@@ -53,7 +52,7 @@ def load_faiss_index(index_path: Path, embeddings: OllamaEmbeddings) -> FAISS:
 
 def get_or_create_faiss_index(
     chunks: list[Document],
-    embeddings: OllamaEmbeddings,
+    embeddings: Embeddings,
     index_path: Path,
     rebuild: bool = False,
 ) -> FAISS:

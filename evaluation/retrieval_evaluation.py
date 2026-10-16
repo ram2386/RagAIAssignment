@@ -39,13 +39,20 @@ QUESTIONS = [
 def main() -> None:
     documents = load_hr_policy_pdf(config.pdf_path)
     chunks = split_documents(documents, config.chunk_size, config.chunk_overlap)
-    embeddings = create_embeddings(config.embedding_model, config.ollama_base_url)
+    embeddings = create_embeddings(
+        config.embedding_provider,
+        config.mistral_embedding_model
+        if config.embedding_provider == "mistral"
+        else config.embedding_model,
+        base_url=config.ollama_base_url,
+    )
     vector_store = get_or_create_faiss_index(chunks, embeddings, config.index_path)
     llm = create_llm(
-        config.local_llm,
-        config.ollama_base_url,
-        config.ollama_num_ctx,
-        config.ollama_num_predict,
+        config.llm_provider,
+        config.mistral_llm if config.llm_provider == "mistral" else config.local_llm,
+        base_url=config.ollama_base_url,
+        num_ctx=config.ollama_num_ctx,
+        num_predict=config.ollama_num_predict,
     )
 
     for item in QUESTIONS:

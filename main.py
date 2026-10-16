@@ -17,22 +17,35 @@ def build_parser() -> ArgumentParser:
     parser.add_argument("--rebuild-index", action="store_true", help="Recreate the FAISS index")
     parser.add_argument("--show-chunks", action="store_true", help="Print sample chunks after splitting")
     parser.add_argument("--search-only", action="store_true", help="Run retrieval without LLM generation")
+    parser.add_argument(
+        "--llm",
+        choices=("mistral", "ollama"),
+        default=config.llm_provider,
+        help="LLM provider for answer generation (default: %(default)s)",
+    )
     return parser
 
 
-def print_header() -> None:
+def print_header(llm_provider: str) -> None:
     print("========================================")
     print("       Innvonix HR Policy Assistant")
     print("========================================\n")
     print("Local RAG System\n")
-    print(f"Embedding Model : {config.embedding_model}")
-    print(f"LLM             : {config.local_llm}")
+    embedding_model = (
+        config.mistral_embedding_model
+        if config.embedding_provider == "mistral"
+        else config.embedding_model
+    )
+    print(f"Embedding Model : {config.embedding_provider} ({embedding_model})")
+    model = config.mistral_llm if llm_provider == "mistral" else config.local_llm
+    print(f"LLM             : {llm_provider} ({model})")
     print("Vector Store    : FAISS\n")
     print("Ask your HR Policy question or type 'exit' to close.\n")
 
 
 def main() -> None:
     args = build_parser().parse_args()
+    llm_model = config.mistral_llm if args.llm == "mistral" else config.local_llm
 
     try:
         documents = load_hr_policy_pdf(config.pdf_path)
@@ -40,7 +53,15 @@ def main() -> None:
         if args.show_chunks:
             display_sample_chunks(chunks)
 
-        embeddings = create_embeddings(config.embedding_model, config.ollama_base_url)
+        embeddings = create_embeddings(
+            config.embedding_provider,
+            (
+                config.mistral_embedding_model
+                if config.embedding_provider == "mistral"
+                else config.embedding_model
+            ),
+            base_url=config.ollama_base_url,
+        )
         vector_store = get_or_create_faiss_index(
             chunks,
             embeddings,
@@ -51,24 +72,23 @@ def main() -> None:
             None
             if args.search_only
             else create_llm(
-                config.local_llm,
-                config.ollama_base_url,
-                config.ollama_num_ctx,
-                config.ollama_num_predict,
+                args.llm,
+                llm_model,
+                base_url=config.ollama_base_url,
+                num_ctx=config.ollama_num_ctx,
+                num_predict=config.ollama_num_predict,
             )
         )
     except (DocumentLoadError, VectorStoreError) as exc:
         print(f"\nError: {exc}")
         return
     except Exception as exc:
-        print("\nError: Could not initialize the local RAG system.")
-        print("Please confirm Ollama is running and both models are installed:")
-        print("  ollama pull nomic-embed-text")
-        print("  ollama pull qwen3:4b")
+        print("\nError: Could not initialize the RAG system.")
+        print("Confirm MISTRAL_API_KEY is configured.")
         print(f"\nDetails: {exc}")
         return
 
-    print_header()
+    print_header(args.llm)
     while True:
         question = input("> ").strip()
         if question.lower() in {"exit", "quit"}:
@@ -93,7 +113,7 @@ def main() -> None:
                 print("\nError: Local LLM was not initialized.\n")
                 continue
 
-            with Spinner("Generating answer with local Ollama model"):
+            with Spinner(f"Generating answer with {args.llm}"):
                 answer, generation_time = generate_answer(question, retrieved_context, llm)
 
             result = RagResult(

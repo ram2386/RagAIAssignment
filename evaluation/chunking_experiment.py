@@ -19,7 +19,13 @@ CONFIGURATIONS = [
 
 def main() -> None:
     documents = load_hr_policy_pdf(config.pdf_path)
-    embeddings = create_embeddings(config.embedding_model, config.ollama_base_url)
+    embeddings = create_embeddings(
+        config.embedding_provider,
+        config.mistral_embedding_model
+        if config.embedding_provider == "mistral"
+        else config.embedding_model,
+        base_url=config.ollama_base_url,
+    )
 
     for label, chunk_size, chunk_overlap in CONFIGURATIONS:
         print("\n========================================")

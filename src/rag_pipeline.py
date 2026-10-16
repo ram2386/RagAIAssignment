@@ -1,10 +1,13 @@
 """End-to-end local RAG pipeline."""
 
 from dataclasses import dataclass
+import os
 from time import perf_counter
 
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_mistralai import ChatMistralAI
 from langchain_ollama import ChatOllama
 
 from src.prompts import RAG_PROMPT
@@ -40,26 +43,34 @@ def format_context(retrieved_context: list[tuple[Document, float]]) -> str:
 
 
 def create_llm(
+    provider: str,
     model: str,
-    base_url: str,
+    base_url: str | None = None,
     num_ctx: int = 4096,
     num_predict: int = 300,
-) -> ChatOllama:
-    """Create the local Ollama chat model."""
-    return ChatOllama(
-        model=model,
-        base_url=base_url,
-        reasoning=False,
-        temperature=0,
-        num_ctx=num_ctx,
-        num_predict=num_predict,
-    )
+) -> BaseChatModel:
+    """Create the selected chat model."""
+    if provider == "mistral":
+        api_key = os.getenv("MISTRAL_API_KEY", "").strip()
+        if not api_key:
+            raise ValueError("MISTRAL_API_KEY is required when using the Mistral LLM.")
+        return ChatMistralAI(model=model, temperature=0, api_key=api_key)
+    if provider == "ollama":
+        return ChatOllama(
+            model=model,
+            base_url=base_url,
+            reasoning=False,
+            temperature=0,
+            num_ctx=num_ctx,
+            num_predict=num_predict,
+        )
+    raise ValueError(f"Unsupported LLM provider: {provider}")
 
 
 def answer_question(
     question: str,
     vector_store: FAISS,
-    llm: ChatOllama,
+    llm: BaseChatModel,
     top_k: int,
 ) -> RagResult:
     """Retrieve context, ask the local LLM, and measure real timings."""
@@ -102,7 +113,7 @@ def answer_question(
 def generate_answer(
     question: str,
     retrieved_context: list[tuple[Document, float]],
-    llm: ChatOllama,
+    llm: BaseChatModel,
 ) -> tuple[str, float]:
     """Generate an answer from already retrieved context."""
     if not retrieved_context:
